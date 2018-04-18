@@ -194,11 +194,11 @@ Invoke-LabCommand -ActivityName 'Getting required modules and publishing them to
 }
 
 <# The Default PSGallery is not removed as the build process does not support an internal repository yet.
-Invoke-LabCommand -ActivityName 'Register ProGet Gallery' -ComputerName (Get-LabVM) -ScriptBlock {
-    Unregister-PSRepository -Name PSGallery
-    $path = "http://DSCPull01.contoso.com:8624/nuget/Internal"
-    Register-PSRepository -Name Internal -SourceLocation $path -PublishLocation $path -InstallationPolicy Trusted
-}
+        Invoke-LabCommand -ActivityName 'Register ProGet Gallery' -ComputerName (Get-LabVM) -ScriptBlock {
+        Unregister-PSRepository -Name PSGallery
+        $path = "http://DSCPull01.contoso.com:8624/nuget/Internal"
+        Register-PSRepository -Name Internal -SourceLocation $path -PublishLocation $path -InstallationPolicy Trusted
+        }
 #>
 
 Invoke-LabCommand -ActivityName 'Disable Git SSL Certificate Check' -ComputerName $tfsServer, $tfsWorker -ScriptBlock {
@@ -215,6 +215,8 @@ Invoke-LabCommand -ActivityName 'Setting the worker service account to local sys
         $service | Restart-Service
     }
 }
+
+Checkpoint-LabVM -All -SnapshotName AfterCustomizations
 
 # Create a new release pipeline
 # Get those build steps from Get-LabBuildStep
@@ -255,11 +257,15 @@ $buildSteps = @(
 # Which will make use of TFS, clone the stuff, add the necessary build step, publish the test results and so on
 # You will see two remotes, Origin (Our code on GitHub) and TFS (Our code pushed to your lab)
 Write-ScreenInfo 'Creating TFS project and cloning from GitHub...' -NoNewLine
-New-LabReleasePipeline -ProjectName 'PSConfEU2018' -SourceRepository https://github.com/AutomatedLab/DscWorkshop -BuildSteps $buildSteps
+New-LabReleasePipeline -ProjectName PSConfEU2018 -SourceRepository https://github.com/AutomatedLab/DscWorkshop -BuildSteps $buildSteps
+cd "$labSources\GitRepositories\DscWorkshop"
+git checkout master 2>&1 | Out-Null
+git pull origin master 2>&1 | Out-Null
+git -c http.sslverify=false push tfs 2>&1 | Out-Null
 Write-ScreenInfo done
 
 # in case you screw something up
-Checkpoint-LabVM -All -SnapshotName AfterCustomizations
+Checkpoint-LabVM -All -SnapshotName AfterPipeline
 #endregion
 
 Show-LabDeploymentSummary -Detailed

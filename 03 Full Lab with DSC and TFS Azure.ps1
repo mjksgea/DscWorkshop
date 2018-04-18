@@ -33,7 +33,7 @@ $PSDefaultParameterValues = @{
     'Add-LabMachineDefinition:DomainName'      = 'contoso.com'
     'Add-LabMachineDefinition:DnsServer1'      = '192.168.111.10'
     'Add-LabMachineDefinition:OperatingSystem' = 'Windows Server 2016 Datacenter (Desktop Experience)'
-    'Add-LabMachineDefinition:AzureProperties' =  @{RoleSize = 'Standard_A2_V2'}
+    'Add-LabMachineDefinition:AzureProperties' =  @{RoleSize = 'Standard_A2_v2'}
 }
 
 #The PostInstallationActivity is just creating some users
@@ -64,14 +64,14 @@ Add-LabMachineDefinition -Name DSCTFS01 -Memory 1GB -Roles Tfs2018
 # DSC target nodes - our legacy VMs with an existing configuration
 
 # Your run-of-the-mill file server in Dev
-Add-LabMachineDefinition -Name "DSCFile01" -Memory 1GB -OperatingSystem 'Windows Server 2016 Datacenter Evaluation' -Roles FileServer
+Add-LabMachineDefinition -Name "DSCFile01" -Memory 1GB -OperatingSystem 'Windows Server 2016 Datacenter' -Roles FileServer
 # and Prod
-Add-LabMachineDefinition -Name "DSCFile02" -Memory 1GB -OperatingSystem 'Windows Server 2016 Datacenter Evaluation' -Roles FileServer
+Add-LabMachineDefinition -Name "DSCFile02" -Memory 1GB -OperatingSystem 'Windows Server 2016 Datacenter' -Roles FileServer
 
 # The ubiquitous web server in Dev
-Add-LabMachineDefinition -Name "DSCWeb01" -Memory 1GB -OperatingSystem 'Windows Server 2016 Datacenter Evaluation' -Roles WebServer
+Add-LabMachineDefinition -Name "DSCWeb01" -Memory 1GB -OperatingSystem 'Windows Server 2016 Datacenter' -Roles WebServer
 # and Prod
-Add-LabMachineDefinition -Name "DSCWeb02" -Memory 1GB -OperatingSystem 'Windows Server 2016 Datacenter Evaluation' -Roles WebServer
+Add-LabMachineDefinition -Name "DSCWeb02" -Memory 1GB -OperatingSystem 'Windows Server 2016 Datacenter' -Roles WebServer
 
 
 Install-Lab
@@ -254,6 +254,10 @@ $buildSteps = @(
 # Which will make use of TFS, clone the stuff, add the necessary build step, publish the test results and so on
 Write-ScreenInfo 'Creating TFS project and cloning from GitHub...' -NoNewLine
 New-LabReleasePipeline -ProjectName 'PSConfEU2018' -SourceRepository https://github.com/AutomatedLab/DscWorkshop -BuildSteps $buildSteps
+cd "$labSources\GitRepositories\DscWorkshop"
+git checkout master
+git pull origin master
+git -c http.sslverify=false push tfs 
 Write-ScreenInfo done
 
 Show-LabDeploymentSummary -Detailed
